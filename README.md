@@ -1,18 +1,41 @@
 # Claude Token Optimizer
 
-Runnable benchmarks and code examples for reducing Claude API and Claude Code token usage by up to 90%. Companion repo to the article *"The Ultimate Guide to 90% Token Reduction in Claude Code"*.
+![Token Optimizer Hero](dashboard/screenshot-hero.png)
+
+## What this actually is
+
+Most Claude users today are on Claude Code chat — a flat subscription, no per-token bill. So "saving tokens" isn't literally saving money for them. What it *is* doing is making Claude more useful.
+
+Every token you send is context Claude has to reason over. Bloated CLAUDE.md files, unchecked dependency folders, redundant instructions — they don't just cost money, they dilute attention. Claude starts missing things, giving generic answers, losing track of what actually matters in your project. Leaner context means sharper responses.
+
+**This repo covers two distinct problems:**
+
+**1. If you're building on the Claude API** — you pay per token, so optimization directly cuts your bill. Stack prompt caching, model routing, and output budgeting and you get 89.3% cost reduction on real workloads. The benchmarks in this repo are reproducible with your own API key.
+
+**2. If you're using Claude Code** (chat or CLI) — you're not paying per token, but you are paying with response quality. A well-structured CLAUDE.md and a tight `.claudeignore` mean Claude spends its context window on your actual code, not on noise. The audit tools here help you find and cut that noise.
+
+These are different problems with different solutions. The numbers aren't comparable — don't read the results table as a single ranking.
+
+---
 
 ## Results
 
-| Technique | Savings | Category |
-|---|---|---|
-| CLAUDE.md optimized | **91.9%** | Claude Code CLI |
-| .claudeignore added | **85.5%** | Claude Code CLI |
-| Model routing (Haiku for simple tasks) | **77.1%** | Claude API |
-| System prompt caching | **71.5%** | Claude API |
-| Multi-turn conversation caching | **63.2%** | Claude API |
-| Output token budgeting | **56.8%** | Claude API |
-| **All API techniques combined** | **89.3%** | Claude API |
+### Claude API — cost savings per request
+
+| Technique | Savings |
+|---|---|
+| Model routing (Haiku for simple tasks) | **77.1%** |
+| System prompt caching | **71.5%** |
+| Multi-turn conversation caching | **63.2%** |
+| Output token budgeting | **56.8%** |
+| **All techniques combined** | **89.3%** |
+
+### Claude Code CLI — context reduction per turn
+
+| Technique | Context reduced |
+|---|---|
+| CLAUDE.md trimmed (3,847 → 312 tokens) | **91.9%** |
+| .claudeignore added | **85.5%** |
 
 ## Setup
 
@@ -49,6 +72,31 @@ python visualize.py
 # Opens: dashboard/index.html
 ```
 
+### 5. Use the Claude Code skill (optional)
+
+If you use Claude Code, install the `/token-optimizer` skill so the audit workflows are always one command away:
+
+```bash
+# Copy the skill into your Claude skills directory
+cp -r skill ~/.claude/skills/token-optimizer
+```
+
+Then trigger it in any Claude Code session:
+
+```
+/token-optimizer
+```
+
+The skill covers all 5 workflows — CLAUDE.md audit, directory scan, prompt caching, model routing, and output budgeting — with direct pointers to the scripts in this repo.
+
+---
+
+## Interactive dashboard
+
+![Savings Calculator](dashboard/screenshot-calculator-section.png)
+
+Open `dashboard/interactive.html` in your browser (or run `python visualize.py` to regenerate it). The calculator lets you enter your monthly API spend and see projected savings per technique in real time.
+
 ---
 
 ## What's inside
@@ -71,12 +119,16 @@ token-optimizer/
 │   ├── after/CLAUDE.md           # Optimized CLAUDE.md (312 tokens)
 │   └── claudeignore.example      # .claudeignore template
 │
+├── skill/
+│   └── SKILL.md                  # Claude Code /token-optimizer skill (copy to ~/.claude/skills/)
+│
 ├── results/
 │   └── benchmark_results.json    # Pre-computed results (or your live run output)
 │
 ├── visualizations/               # Generated PNG charts
 └── dashboard/
-    └── index.html                # Interactive results dashboard
+    ├── index.html                # Static results dashboard
+    └── interactive.html          # Interactive dashboard with savings calculator
 ```
 
 ---
