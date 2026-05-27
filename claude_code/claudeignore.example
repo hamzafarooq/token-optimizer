@@ -1,0 +1,67 @@
+# .claudeignore — exclude these from Claude Code's context
+# Copy to .claudeignore in your project root
+
+# Dependencies (never useful for Claude to read)
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+vendor/
+
+# Build artifacts
+dist/
+build/
+.next/
+out/
+*.min.js
+*.bundle.js
+
+# Generated files
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Large data files
+*.csv
+*.json.gz
+*.parquet
+data/
+datasets/
+fixtures/large/
+
+# Media assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.pdf
+
+# Logs
+*.log
+logs/
+.DS_Store
+
+# Test snapshots (usually large and low-signal)
+**/__snapshots__/
+*.snap
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# IDE configs
+.idea/
+.vscode/settings.json
+
+# Migrations (if you have hundreds)
+# migrations/   # uncomment if migrations are noise
+
+# Docs that Claude doesn't need for coding tasks
+docs/
+*.md
+!CLAUDE.md
+!README.md

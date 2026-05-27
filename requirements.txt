@@ -1,0 +1,4 @@
+# Use the conda environment — see README for setup
+anthropic>=0.40.0
+matplotlib>=3.9.0
+numpy>=2.0.0

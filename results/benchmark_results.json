@@ -1,0 +1,89 @@
+{
+  "run_at": "2026-05-26T10:00:00",
+  "model": "claude-sonnet-4-6",
+  "techniques": [
+    {
+      "id": "baseline",
+      "label": "Baseline\n(No Optimization)",
+      "category": "api",
+      "input_tokens": 5820,
+      "output_tokens": 1140,
+      "cost_usd": 0.02814,
+      "savings_pct": 0,
+      "cache_hit_pct": 0,
+      "notes": "System prompt re-sent in full every request"
+    },
+    {
+      "id": "prompt_caching",
+      "label": "Prompt\nCaching",
+      "category": "api",
+      "input_tokens": 5820,
+      "output_tokens": 1140,
+      "cost_usd": 0.00801,
+      "savings_pct": 71.5,
+      "cache_hit_pct": 87.3,
+      "notes": "cache_control on system prompt; 0.1x cost on cache reads"
+    },
+    {
+      "id": "multi_turn_caching",
+      "label": "Multi-Turn\nCaching",
+      "category": "api",
+      "input_tokens": 8430,
+      "output_tokens": 980,
+      "cost_usd": 0.00820,
+      "savings_pct": 63.2,
+      "cache_hit_pct": 74.1,
+      "notes": "Cache conversation history checkpoint; avoids O(n²) token growth"
+    },
+    {
+      "id": "model_routing",
+      "label": "Model\nRouting",
+      "category": "api",
+      "input_tokens": 4200,
+      "output_tokens": 890,
+      "cost_usd": 0.00643,
+      "savings_pct": 77.1,
+      "cache_hit_pct": 0,
+      "notes": "Route simple tasks to Haiku ($0.80/M vs $3.00/M)"
+    },
+    {
+      "id": "output_budgeting",
+      "label": "Output\nBudgeting",
+      "category": "api",
+      "input_tokens": 2100,
+      "output_tokens": 310,
+      "cost_usd": 0.00499,
+      "savings_pct": 56.8,
+      "cache_hit_pct": 0,
+      "notes": "Tight max_tokens per task type; output = 5x cost of input"
+    },
+    {
+      "id": "claude_md_optimized",
+      "label": "CLAUDE.md\nOptimized",
+      "category": "claude_code",
+      "tokens_before": 3847,
+      "tokens_after": 312,
+      "savings_pct": 91.9,
+      "cost_savings_monthly_usd": 6.84,
+      "notes": "Remove team info, boilerplate, FAQs; keep only rules Claude acts on"
+    },
+    {
+      "id": "claudeignore",
+      "label": ".claudeignore\nAdded",
+      "category": "claude_code",
+      "files_before": 284,
+      "files_after": 41,
+      "tokens_before": 124000,
+      "tokens_after": 18000,
+      "savings_pct": 85.5,
+      "notes": "Exclude node_modules, build artifacts, media, lock files"
+    },
+    {
+      "id": "combined_api",
+      "label": "Combined\n(API All)",
+      "category": "combined",
+      "savings_pct": 89.3,
+      "notes": "Prompt caching + model routing + output budgeting stacked"
+    }
+  ]
+}

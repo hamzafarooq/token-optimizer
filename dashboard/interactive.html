@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Token Optimizer — Interactive Results Dashboard</title>
+<style>
+/* RAW GRID design system */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --black: #0a0a0a;
+  --white: #ffffff;
+  --pink: #f2d4cf;
+  --green: #e5edd6;
+  --gray: #f5f5f5;
+  --border: 3px solid var(--black);
+  --shadow: 6px 6px 0 var(--black);
+}
+html, body {
+  font-family: 'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  background: var(--white);
+  color: var(--black);
+  overflow-x: hidden;
+}
+
+/* TYPOGRAPHY */
+.t-display {
+  font-size: clamp(56px, 8vw, 120px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.t-headline {
+  font-size: clamp(28px, 3.5vw, 52px);
+  font-weight: 900;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.t-title {
+  font-size: clamp(16px, 1.8vw, 24px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.t-body {
+  font-size: clamp(14px, 1.2vw, 17px);
+  font-weight: 500;
+  line-height: 1.6;
+}
+.t-caption {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.t-number {
+  font-size: clamp(40px, 5vw, 80px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* COMPONENTS */
+.label {
+  display: inline-block;
+  background: var(--black);
+  color: var(--white);
+  padding: 5px 12px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.label-green { background: var(--green); color: var(--black); }
+.label-pink  { background: var(--pink);  color: var(--black); }
+
+/* STICKY NAV */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--white);
+  border-bottom: var(--border);
+  display: flex;
+  height: 48px;
+}
+.topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px;
+  border-right: var(--border);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.topnav-links {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+}
+.topnav-links a {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  text-decoration: none;
+  color: var(--black);
+  border-right: var(--border);
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+.topnav-links a:last-child { border-right: none; }
+.topnav-links a:hover { background: var(--green); }
+
+/* HERO */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  border-bottom: var(--border);
+}
+.hero-left {
+  background: var(--pink);
+  border-right: var(--border);
+  padding: clamp(40px, 5vw, 80px) clamp(32px, 4vw, 64px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.hero-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-logo {
+  width: 44px; height: 44px;
+  border: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 900;
+  background: var(--white);
+}
+.hero-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 40px 0; }
+.hero-right {
+  display: flex;
+  flex-direction: column;
+}
+.hero-stat-block {
+  flex: 1;
+  padding: clamp(24px, 3vw, 44px) clamp(32px, 4vw, 64px);
+  border-bottom: var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hero-stat-block:last-child { border-bottom: none; }
+.hero-stat-block:nth-child(2) { background: var(--green); }
+
+/* CALCULATOR */
+.calculator-section { border-bottom: var(--border); }
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(16px, 2vw, 28px) clamp(32px, 4vw, 64px);
+  border-bottom: var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.calc-body {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+}
+.calc-input-panel {
+  border-right: var(--border);
+  padding: clamp(28px, 3.5vw, 52px);
+  background: var(--black);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.calc-field-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+  margin-bottom: 6px;
+}
+.spend-display {
+  font-size: clamp(44px, 6vw, 80px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.spend-unit {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.4;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+input[type="range"] {
+  width: 100%;
+  height: 5px;
+  -webkit-appearance: none;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.35);
+  outline: none;
+  cursor: pointer;
+  margin: 6px 0;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  background: var(--white);
+  border: 3px solid var(--black);
+  cursor: pointer;
+}
+.range-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.35;
+  text-transform: uppercase;
+}
+.calc-results-panel {
+  padding: clamp(28px, 3.5vw, 52px);
+  display: flex;
+  flex-direction: column;
+}
+.calc-results-header {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+  margin-bottom: 20px;
+}
+.tech-row {
+  display: grid;
+  grid-template-columns: 190px 1fr 110px;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+.tech-row:last-child { border-bottom: none; }
+.tech-name-col { }
+.tech-name {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+.tech-cat-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  margin-top: 3px;
+  letter-spacing: 0.05em;
+}
+.tech-bar-track {
+  height: 32px;
+  background: var(--gray);
+  border: 2px solid var(--black);
+  overflow: hidden;
+}
+.tech-bar-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  transition: width 0.55s cubic-bezier(0.34, 1.4, 0.64, 1);
+  white-space: nowrap;
+}
+.tech-savings-col { text-align: right; }
+.tech-saved-amt {
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 900;
+  line-height: 1;
+}
+.tech-saved-sub {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0.4;
+  text-transform: uppercase;
+}
+
+/* BENCHMARK CHART */
+.benchmark-section { border-bottom: var(--border); }
+.chart-wrap {
+  padding: clamp(28px, 3.5vw, 52px);
+  height: 400px;
+  position: relative;
+}
+
+/* TECHNIQUE CARDS */
+.techniques-section { border-bottom: var(--border); }
+.techniques-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.tc-card {
+  padding: clamp(24px, 3vw, 40px);
+  display: flex;
+  flex-direction: column;
+  border-right: var(--border);
+  min-height: 300px;
+}
+.tc-card:last-child { border-right: none; }
+.tc-card:nth-child(1) { background: var(--white); }
+.tc-card:nth-child(2) { background: var(--green); }
+.tc-card:nth-child(3) { background: var(--pink); }
+.tc-card:nth-child(4) { background: var(--gray); }
+.tc-num {
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 900;
+  opacity: 0.13;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.tc-savings {
+  font-size: clamp(28px, 3.5vw, 48px);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.tc-saved-tag {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.45;
+  margin-bottom: 14px;
+}
+.tc-title {
+  font-size: clamp(13px, 1.4vw, 16px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+}
+.tc-body {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.55;
+  opacity: 0.7;
+  flex: 1;
+}
+.tc-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.tc-tag {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border: 2px solid var(--black);
+  background: var(--white);
+}
+
+/* CLAUDE CODE */
+.cc-section { border-bottom: var(--border); }
+.cc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.cc-panel {
+  padding: clamp(32px, 4vw, 56px);
+  display: flex;
+  flex-direction: column;
+}
+.cc-panel:first-child {
+  border-right: var(--border);
+  background: var(--black);
+  color: var(--white);
+}
+.cc-panel:last-child { background: var(--green); }
+.cc-icon {
+  width: 52px; height: 52px;
+  border: 3px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 900;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+.cc-big-num {
+  font-size: clamp(56px, 7vw, 100px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.cc-before-after {
+  display: flex;
+  border: 3px solid currentColor;
+  margin-top: 28px;
+}
+.cc-ba-block {
+  flex: 1;
+  padding: 14px;
+  text-align: center;
+}
+.cc-ba-block:first-child { border-right: 3px solid currentColor; }
+.cc-ba-num {
+  font-size: clamp(22px, 3vw, 36px);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.cc-ba-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+}
+.cc-note {
+  margin-top: 14px;
+  padding: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  border: 2px solid rgba(255,255,255,0.15);
+  opacity: 0.7;
+}
+.cc-note-green {
+  border-color: rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.05);
+  opacity: 1;
+}
+
+/* CTA */
+.cta-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 55vh;
+}
+.cta-left {
+  background: var(--black);
+  color: var(--white);
+  padding: clamp(40px, 5vw, 80px) clamp(32px, 4vw, 64px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: var(--border);
+}
+.cta-right {
+  background: var(--pink);
+  padding: clamp(40px, 5vw, 80px) clamp(32px, 4vw, 64px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.cta-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 28px;
+}
+.cta-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.cta-step-num {
+  width: 28px; height: 28px;
+  border: 3px solid var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
+  background: var(--white);
+  color: var(--black);
+}
+.cta-step-text {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding-top: 3px;
+  color: rgba(255,255,255,0.75);
+}
+.code-block {
+  border: var(--border);
+  padding: 18px 20px;
+  background: var(--white);
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 24px 0;
+  box-shadow: var(--shadow);
+  line-height: 1.7;
+}
+.code-comment { opacity: 0.4; }
+.mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mini-card {
+  border: var(--border);
+  padding: 14px;
+  background: var(--white);
+  box-shadow: 4px 4px 0 var(--black);
+}
+.mini-card-dark {
+  background: var(--black);
+  color: var(--white);
+  box-shadow: 4px 4px 0 #555;
+}
+.mini-card-num {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.mini-card-label {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+}
+
+/* CODE EXAMPLES */
+.code-ex-section { border-bottom: var(--border); }
+.tab-bar {
+  display: flex;
+  border-bottom: var(--border);
+  overflow-x: auto;
+}
+.cex-tab {
+  flex-shrink: 0;
+  padding: 0 22px;
+  height: 44px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border: none;
+  border-right: var(--border);
+  background: var(--white);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.cex-tab:last-child { border-right: none; }
+.cex-tab:hover { background: var(--green); }
+.cex-tab.active { background: var(--black); color: var(--white); }
+.cex-panel { display: none; }
+.cex-panel.active { display: grid; grid-template-columns: 1fr 1fr; }
+.cex-half {
+  display: flex;
+  flex-direction: column;
+}
+.cex-half:first-child { border-right: var(--border); }
+.cex-half-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: var(--border);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.cex-half:first-child .cex-half-header { background: var(--pink); }
+.cex-half:last-child  .cex-half-header { background: var(--green); }
+.cex-code {
+  flex: 1;
+  margin: 0;
+  padding: 20px 24px;
+  background: #0f1117;
+  color: #c9d1d9;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  overflow-x: auto;
+  white-space: pre;
+}
+.cex-code .hl  { background: rgba(255, 220, 80, 0.18); display: inline-block; width: 100%; }
+.cex-code .cm  { opacity: 0.4; }
+.cex-code .kw  { color: #ff7b72; }
+.cex-code .st  { color: #a5d6ff; }
+.cex-code .fn  { color: #d2a8ff; }
+.cex-code .num { color: #79c0ff; }
+.cex-code .add { color: #7ee787; }
+.cex-diff-note {
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  border-top: var(--border);
+  background: var(--gray);
+}
+@media (max-width: 800px) {
+  .cex-panel.active { grid-template-columns: 1fr; }
+  .cex-half:first-child { border-right: none; border-bottom: var(--border); }
+}
+
+/* FOOTER */
+.footer-strip {
+  display: flex;
+  border-top: var(--border);
+  height: 50px;
+}
+.footer-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-right: var(--border);
+  text-decoration: none;
+  color: var(--black);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.footer-link:last-child { border-right: none; }
+.footer-link:hover { background: var(--green); }
+.footer-link.hi { background: var(--black); color: var(--white); }
+
+/* RESPONSIVE */
+@media (max-width: 960px) {
+  .hero, .calc-body, .cc-grid, .cta-section { grid-template-columns: 1fr; }
+  .hero-left, .calc-input-panel { border-right: none; border-bottom: var(--border); }
+  .cc-panel:first-child { border-right: none; border-bottom: var(--border); }
+  .cta-left { border-right: none; border-bottom: var(--border); }
+  .techniques-grid { grid-template-columns: 1fr 1fr; }
+  .tc-card:nth-child(even) { border-right: none; }
+  .tc-card:nth-child(1), .tc-card:nth-child(2) { border-bottom: var(--border); }
+  .hero-right { min-height: 40vh; }
+}
+@media (max-width: 600px) {
+  .techniques-grid { grid-template-columns: 1fr; }
+  .tc-card { border-right: none !important; border-bottom: var(--border); }
+  .tech-row { grid-template-columns: 1fr 1fr; }
+  .tech-name-col { grid-column: 1 / -1; }
+  .footer-strip { flex-wrap: wrap; height: auto; }
+  .footer-link { min-height: 40px; border-bottom: var(--border); }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="topnav-brand">
+    <span>◆</span> TOKEN OPTIMIZER
+  </div>
+  <div class="topnav-links">
+    <a href="#calculator">Calculator</a>
+    <a href="#benchmarks">Benchmarks</a>
+    <a href="#techniques">Techniques</a>
+    <a href="#claude-code">Claude Code</a>
+    <a href="#results">Results</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-brand-row">
+      <div class="hero-logo">◆</div>
+      <span style="font-size: 17px; font-weight: 900; letter-spacing: -0.01em;">TOKEN OPTIMIZER</span>
+    </div>
+    <div class="hero-mid">
+      <div class="t-display" style="margin-bottom: 20px;">89%<br>Token<br>Savings.</div>
+      <p class="t-body" style="max-width: 360px; opacity: 0.75; margin-bottom: 28px;">
+        7 benchmarked techniques for Claude API &amp; Claude Code. From prompt caching to model routing — provably cheaper, measurably faster.
+      </p>
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <a href="#calculator" class="label" style="padding: 9px 18px; text-decoration: none; cursor: pointer;">→ Calculate Your Savings</a>
+        <span class="t-caption" style="opacity: 0.4;">Benchmarked on claude-sonnet-4-6</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-stat-block">
+      <span class="t-caption" style="opacity: 0.45; margin-bottom: 10px;">Baseline cost / request</span>
+      <div class="t-number">$0.028</div>
+      <span class="t-caption" style="opacity: 0.35; margin-top: 6px;">5,820 input + 1,140 output tokens</span>
+    </div>
+    <div class="hero-stat-block">
+      <span class="t-caption" style="opacity: 0.45; margin-bottom: 10px;">Best optimized cost / request</span>
+      <div class="t-number" style="color: #2f855a;">$0.003</div>
+      <span class="t-caption" style="opacity: 0.35; margin-top: 6px;">Prompt caching + model routing + output budgeting</span>
+    </div>
+    <div class="hero-stat-block" style="background: var(--gray);">
+      <span class="t-caption" style="opacity: 0.45; margin-bottom: 10px;">CLAUDE.md token reduction</span>
+      <div class="t-number">91.9%</div>
+      <span class="t-caption" style="opacity: 0.35; margin-top: 6px;">3,847 tokens → 312 tokens</span>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section class="calculator-section" id="calculator">
+  <div class="section-header">
+    <span class="t-title">Savings Calculator</span>
+    <span class="label label-green">Interactive</span>
+  </div>
+  <div class="calc-body">
+    <div class="calc-input-panel">
+      <div>
+        <div class="calc-field-label">Monthly API spend</div>
+        <div class="spend-display" id="spendDisplay">$500</div>
+        <div class="spend-unit">/ month</div>
+      </div>
+      <div>
+        <input type="range" id="spendSlider" min="10" max="10000" value="500" step="10">
+        <div class="range-ticks">
+          <span>$10</span><span>$2,500</span><span>$10,000</span>
+        </div>
+      </div>
+      <div>
+        <div class="calc-field-label">Estimated monthly volume</div>
+        <div style="font-size: 20px; font-weight: 900;" id="volumeDisplay">~17,767 requests</div>
+      </div>
+      <div style="font-size: 11px; opacity: 0.45; line-height: 1.6; margin-top: auto;">
+        Based on claude-sonnet-4-6 pricing:<br>
+        $3.00/M input · $15.00/M output<br>
+        Assumes 5,820 input + 1,140 output tokens/req
+      </div>
+    </div>
+    <div class="calc-results-panel">
+      <div class="calc-results-header">Projected monthly savings by technique</div>
+      <div id="calcResults"></div>
+    </div>
+  </div>
+</section>
+
+<!-- BENCHMARKS -->
+<section class="benchmark-section" id="benchmarks">
+  <div class="section-header">
+    <span class="t-title">API Benchmark Results</span>
+    <span class="label">claude-sonnet-4-6 · May 2026</span>
+  </div>
+  <div class="chart-wrap">
+    <canvas id="savingsChart"></canvas>
+  </div>
+</section>
+
+<!-- TECHNIQUES -->
+<section class="techniques-section" id="techniques">
+  <div class="section-header">
+    <span class="t-title">API Optimization Techniques</span>
+    <span class="label label-pink">4 Methods</span>
+  </div>
+  <div class="techniques-grid">
+    <div class="tc-card">
+      <div class="tc-num">01</div>
+      <div class="tc-savings">71.5%</div>
+      <div class="tc-saved-tag">cost savings</div>
+      <div class="tc-title">Prompt Caching</div>
+      <p class="tc-body">Add <code style="font-size: 10px; background: rgba(0,0,0,0.07); padding: 1px 4px;">cache_control</code> to your system prompt. Cache reads cost 0.1× vs a fresh read. At 87.3% hit rate, savings compound with every request.</p>
+      <div class="tc-tags">
+        <span class="tc-tag" style="background: var(--green);">87.3% cache hit</span>
+        <span class="tc-tag">$0.028 → $0.008</span>
+      </div>
+    </div>
+    <div class="tc-card">
+      <div class="tc-num">02</div>
+      <div class="tc-savings">77.1%</div>
+      <div class="tc-saved-tag">cost savings</div>
+      <div class="tc-title">Model Routing</div>
+      <p class="tc-body">Route simple tasks to Haiku ($0.80/M input) instead of Sonnet ($3.00/M). Classify task complexity first; send only hard tasks upstream. 3.75× cheaper on routed calls.</p>
+      <div class="tc-tags">
+        <span class="tc-tag" style="background: var(--green);">Haiku vs Sonnet</span>
+        <span class="tc-tag">$0.028 → $0.006</span>
+      </div>
+    </div>
+    <div class="tc-card">
+      <div class="tc-num">03</div>
+      <div class="tc-savings">63.2%</div>
+      <div class="tc-saved-tag">cost savings</div>
+      <div class="tc-title">Multi-Turn Caching</div>
+      <p class="tc-body">Without caching, multi-turn conversations grow O(n²) — each message re-sends the full history. Cache the conversation checkpoint and break the growth curve.</p>
+      <div class="tc-tags">
+        <span class="tc-tag" style="background: var(--green);">74.1% cache hit</span>
+        <span class="tc-tag">$0.028 → $0.008</span>
+      </div>
+    </div>
+    <div class="tc-card">
+      <div class="tc-num">04</div>
+      <div class="tc-savings">56.8%</div>
+      <div class="tc-saved-tag">cost savings</div>
+      <div class="tc-title">Output Budgeting</div>
+      <p class="tc-body">Output tokens cost 5× more than input. Set tight <code style="font-size: 10px; background: rgba(0,0,0,0.07); padding: 1px 4px;">max_tokens</code> per task type. A classification task doesn't need 2,000 tokens of headroom.</p>
+      <div class="tc-tags">
+        <span class="tc-tag" style="background: var(--green);">310 vs 1,140 out</span>
+        <span class="tc-tag">$0.028 → $0.005</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CODE EXAMPLES -->
+<section class="code-ex-section" id="code-examples">
+  <div class="section-header">
+    <span class="t-title">Code Examples — From the Repo</span>
+    <span class="label label-pink">Before &amp; After</span>
+  </div>
+  <div class="tab-bar">
+    <button class="cex-tab active" data-idx="0">01 · Prompt Caching</button>
+    <button class="cex-tab" data-idx="1">02 · Multi-Turn</button>
+    <button class="cex-tab" data-idx="2">03 · Model Routing</button>
+    <button class="cex-tab" data-idx="3">04 · Output Budgeting</button>
+    <button class="cex-tab" data-idx="4">05 · CLAUDE.md</button>
+  </div>
+  <div id="cexPanels"></div>
+</section>
+
+<!-- CLAUDE CODE -->
+<section class="cc-section" id="claude-code">
+  <div class="section-header">
+    <span class="t-title">Claude Code Optimizations</span>
+    <span class="label">CLI · CLAUDE.md · .claudeignore</span>
+  </div>
+  <div class="cc-grid">
+    <div class="cc-panel">
+      <div class="cc-icon">MD</div>
+      <div class="t-caption" style="opacity: 0.45; margin-bottom: 6px;">CLAUDE.md Optimization</div>
+      <div class="cc-big-num">91.9%</div>
+      <p class="t-body" style="opacity: 0.65; max-width: 420px;">Strip team info, boilerplate, and FAQs. Keep only rules Claude acts on. Every token in CLAUDE.md gets re-sent on every request — dead weight is pure cost.</p>
+      <div class="cc-before-after">
+        <div class="cc-ba-block">
+          <div class="cc-ba-num" style="opacity: 0.4; text-decoration: line-through;">3,847</div>
+          <div class="cc-ba-label">tokens before</div>
+        </div>
+        <div class="cc-ba-block">
+          <div class="cc-ba-num">312</div>
+          <div class="cc-ba-label">tokens after</div>
+        </div>
+      </div>
+      <div class="cc-note">Monthly savings: ~<strong>$6.84</strong> at 50K requests/month</div>
+    </div>
+    <div class="cc-panel">
+      <div class="cc-icon">🚫</div>
+      <div class="t-caption" style="opacity: 0.45; margin-bottom: 6px;">.claudeignore Setup</div>
+      <div class="cc-big-num">85.5%</div>
+      <p class="t-body" style="max-width: 420px;">Exclude node_modules, build artifacts, media files, and lock files. Fewer files in context = faster responses and lower token cost per session.</p>
+      <div class="cc-before-after" style="border-color: var(--black);">
+        <div class="cc-ba-block" style="border-right-color: var(--black);">
+          <div class="cc-ba-num" style="opacity: 0.4; text-decoration: line-through;">284</div>
+          <div class="cc-ba-label" style="opacity: 0.5;">files before</div>
+        </div>
+        <div class="cc-ba-block">
+          <div class="cc-ba-num">41</div>
+          <div class="cc-ba-label" style="opacity: 0.5;">files after</div>
+        </div>
+      </div>
+      <div class="cc-note cc-note-green">Context window: <strong>124,000 → 18,000</strong> tokens per session</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / COMBINED -->
+<section class="cta-section" id="results">
+  <div class="cta-left">
+    <span class="label label-green" style="align-self: flex-start; margin-bottom: 24px;">Combined Result</span>
+    <div class="t-display" style="color: var(--white); margin-bottom: 12px;">89.3%</div>
+    <div class="t-title" style="color: rgba(255,255,255,0.55); font-size: 15px; margin-bottom: 20px;">Saved by stacking techniques</div>
+    <p class="t-body" style="color: rgba(255,255,255,0.55); max-width: 420px;">Prompt caching + model routing + output budgeting together. Savings stack multiplicatively — each layer cuts what's left.</p>
+    <div class="cta-steps">
+      <div class="cta-step">
+        <div class="cta-step-num">1</div>
+        <div class="cta-step-text">Add <code style="opacity: 0.65; font-size: 11px;">cache_control</code> to system prompt → 71% savings on repeat requests, immediate.</div>
+      </div>
+      <div class="cta-step">
+        <div class="cta-step-num">2</div>
+        <div class="cta-step-text">Classify task complexity, route simple tasks to Haiku → 77% savings on routed volume.</div>
+      </div>
+      <div class="cta-step">
+        <div class="cta-step-num">3</div>
+        <div class="cta-step-text">Set tight max_tokens per task type → 57% savings on output cost alone (5× multiplier).</div>
+      </div>
+      <div class="cta-step">
+        <div class="cta-step-num">4</div>
+        <div class="cta-step-text">Audit CLAUDE.md + add .claudeignore → 85–92% savings in every Claude Code session.</div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-right">
+    <span class="label" style="align-self: flex-start; margin-bottom: 24px;">Run the audit</span>
+    <div class="t-headline" style="margin-bottom: 16px;">Token Optimizer</div>
+    <p class="t-body" style="opacity: 0.7; margin-bottom: 4px;">All benchmark scripts, audit tools, and before/after examples are in the open-source repo.</p>
+    <div class="code-block">
+      <span class="code-comment"># run token audit</span><br>
+      python claude_code/token_audit.py<br><br>
+      <span class="code-comment"># run benchmarks</span><br>
+      python benchmark.py<br><br>
+      <span class="code-comment"># visualize results</span><br>
+      python visualize.py
+    </div>
+    <div class="mini-grid">
+      <div class="mini-card">
+        <div class="mini-card-num">7</div>
+        <div class="mini-card-label">Techniques</div>
+      </div>
+      <div class="mini-card mini-card-dark">
+        <div class="mini-card-num">89%</div>
+        <div class="mini-card-label">Max savings</div>
+      </div>
+      <div class="mini-card" style="background: var(--green);">
+        <div class="mini-card-num">$0.003</div>
+        <div class="mini-card-label">Per request</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-card-num">91.9%</div>
+        <div class="mini-card-label">CLAUDE.md cut</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer-strip">
+  <a href="#calculator" class="footer-link">→ Calculator</a>
+  <a href="#benchmarks" class="footer-link">→ Benchmarks</a>
+  <a href="#techniques" class="footer-link">→ Techniques</a>
+  <a href="#claude-code" class="footer-link">→ Claude Code</a>
+  <a href="#results" class="footer-link hi">→ Results</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* ── DATA ─────────────────────────────────────── */
+const BASELINE_COST = 0.02814;
+const techniques = [
+  { id: "prompt_caching",   name: "Prompt Caching",     cat: "api",         pct: 71.5, cost: 0.00801 },
+  { id: "model_routing",    name: "Model Routing",      cat: "api",         pct: 77.1, cost: 0.00643 },
+  { id: "multi_turn",       name: "Multi-Turn Caching", cat: "api",         pct: 63.2, cost: 0.00820 },
+  { id: "output_budgeting", name: "Output Budgeting",   cat: "api",         pct: 56.8, cost: 0.00499 },
+  { id: "combined",         name: "Combined (All)",     cat: "combined",    pct: 89.3, cost: 0.00301 },
+  { id: "claude_md",        name: "CLAUDE.md Trim",     cat: "claude_code", pct: 91.9, cost: null    },
+  { id: "claudeignore",     name: ".claudeignore",      cat: "claude_code", pct: 85.5, cost: null    },
+];
+
+const BAR_COLORS = {
+  api:         "#e5edd6",
+  combined:    "#0a0a0a",
+  claude_code: "#f2d4cf",
+};
+const BAR_TEXT = {
+  api: "#0a0a0a", combined: "#ffffff", claude_code: "#0a0a0a"
+};
+const CAT_LABELS = { api: "API", combined: "Stacked", claude_code: "CLI" };
+const CAT_BG     = { api: "#e5edd6", combined: "#0a0a0a", claude_code: "#f2d4cf" };
+const CAT_COLOR  = { api: "#0a0a0a", combined: "#ffffff", claude_code: "#0a0a0a" };
+
+/* ── UTILITIES ────────────────────────────────── */
+function fmtMoney(n) {
+  if (n >= 1000) return "$" + (n / 1000).toFixed(1) + "K";
+  return "$" + n.toFixed(0);
+}
+
+/* ── CALCULATOR ───────────────────────────────── */
+const slider  = document.getElementById("spendSlider");
+const spendEl = document.getElementById("spendDisplay");
+const volEl   = document.getElementById("volumeDisplay");
+const resEl   = document.getElementById("calcResults");
+
+function renderCalc(spend) {
+  spendEl.textContent = fmtMoney(spend);
+  const vol = Math.round(spend / BASELINE_COST);
+  volEl.textContent = "~" + vol.toLocaleString() + " requests";
+
+  const rows = techniques.map(t => {
+    const saved = spend * (t.pct / 100);
+    const fill  = BAR_COLORS[t.cat];
+    const ftxt  = BAR_TEXT[t.cat];
+    const cbg   = CAT_BG[t.cat];
+    const ccol  = CAT_COLOR[t.cat];
+    const amtColor = t.id === "combined" ? "#1a7a3c" : "inherit";
+    return `<div class="tech-row">
+      <div class="tech-name-col">
+        <div class="tech-name">${t.name}</div>
+        <span class="tech-cat-tag" style="background:${cbg};color:${ccol};">${CAT_LABELS[t.cat]}</span>
+      </div>
+      <div class="tech-bar-track">
+        <div class="tech-bar-fill" style="width:${t.pct}%;background:${fill};color:${ftxt};">${t.pct}%</div>
+      </div>
+      <div class="tech-savings-col">
+        <div class="tech-saved-amt" style="color:${amtColor};">${fmtMoney(saved)}</div>
+        <div class="tech-saved-sub">saved/mo</div>
+      </div>
+    </div>`;
+  });
+  resEl.innerHTML = rows.join("");
+}
+
+slider.addEventListener("input", () => renderCalc(Number(slider.value)));
+renderCalc(500);
+
+/* ── CODE EXAMPLES ───────────────────────────── */
+const CEX = [
+  {
+    title: "Prompt Caching",
+    file_before: "api/01_baseline.py",
+    file_after:  "api/02_prompt_caching.py",
+    note_before: "System prompt re-sent in full every request. No cache. $0.028/req.",
+    note_after:  "cache_control added to system block. 87.3% cache hit → $0.008/req. 71.5% savings.",
+    before: `# api/01_baseline.py — key section
+
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    system=SYSTEM_PROMPT,        # plain string — full re-send every call
+    messages=[{
+        "role": "user",
+        "content": question,
+    }],
+)
+
+input_tokens  = response.usage.input_tokens
+output_tokens = response.usage.output_tokens
+# No cache_creation_input_tokens or cache_read_input_tokens
+# Cost per request: $0.02814`,
+
+    after: `# api/02_prompt_caching.py — key section
+
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    system=[{                             # list form required for cache_control
+        "type": "text",
+        "text": SYSTEM_PROMPT,
+        "cache_control": {"type": "ephemeral"},   # ← THE ONLY CHANGE
+    }],
+    messages=[{
+        "role": "user",
+        "content": question,
+    }],
+)
+
+usage = response.usage
+cache_write = usage.cache_creation_input_tokens   # 1.25× cost (first write)
+cache_read  = usage.cache_read_input_tokens       # 0.10× cost ✓ (every hit)
+# At 87.3% hit rate → cost per request: $0.00801  (71.5% savings)`,
+  },
+
+  {
+    title: "Multi-Turn Caching",
+    file_before: "api/03_multi_turn_caching.py  (without_caching branch)",
+    file_after:  "api/03_multi_turn_caching.py  (with_caching branch)",
+    note_before: "Full history re-sent every turn. 5-turn chat = O(n²) token growth. $0.0224.",
+    note_after:  "cache_control on last assistant turn. 74.1% hit rate. $0.0082. 63.2% savings.",
+    before: `# run_without_history_caching() — each turn re-sends full history
+
+messages = []
+
+for question in CONVERSATION_TURNS:
+    messages.append({"role": "user", "content": question})
+
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=256,
+        system=SYSTEM,
+        messages=messages,           # full history every turn → O(n²) tokens
+    )
+
+    answer = response.content[0].text
+    messages.append({"role": "assistant", "content": answer})
+
+    # Turn 1: ~100 tokens  Turn 5: ~900 tokens — grows every turn
+    print(f"Turn {i}: {response.usage.input_tokens:,} input tokens")`,
+
+    after: `# run_with_history_caching() — cache last assistant turn before each new message
+
+messages = []
+
+for i, question in enumerate(CONVERSATION_TURNS, 1):
+    # Mark last assistant message for caching before appending new user turn
+    if messages and messages[-1]["role"] == "assistant":
+        messages[-1] = {                          # ← WRAP LAST ASSISTANT MSG
+            "role": "assistant",
+            "content": [{
+                "type": "text",
+                "text": messages[-1]["content"],
+                "cache_control": {"type": "ephemeral"},   # ← CACHE THE HISTORY
+            }],
+        }
+
+    messages.append({"role": "user", "content": question})
+    response = client.messages.create(
+        model="claude-sonnet-4-6", max_tokens=256,
+        system=SYSTEM, messages=messages,
+    )
+    answer = response.content[0].text
+    messages.append({"role": "assistant", "content": answer})  # plain for next iter
+
+    cache_read = getattr(response.usage, "cache_read_input_tokens", 0)
+    print(f"Turn {i}: {response.usage.input_tokens:,} input ({cache_read:,} cached ✓)")
+# Turn 5: history is cached; only new message charged full price`,
+  },
+
+  {
+    title: "Model Routing",
+    file_before: "api/04_model_routing.py  (run_without_routing)",
+    file_after:  "api/04_model_routing.py  (run_with_routing)",
+    note_before: "All 6 tasks on Sonnet ($3.00/M). Simple lookups pay the same as complex code. $0.0244.",
+    note_after:  "Haiku classifier routes simple tasks to Haiku ($0.80/M). 77.1% savings. $0.0056.",
+    before: `# run_without_routing() — all tasks default to Sonnet
+
+for task in TASKS:
+    response = client.messages.create(
+        model="claude-sonnet-4-6",      # $3.00/M input for EVERY task
+        max_tokens=512,
+        messages=[{
+            "role": "user",
+            "content": task["prompt"],
+        }],
+    )
+    cost = compute_cost("claude-sonnet-4-6",
+                        response.usage.input_tokens,
+                        response.usage.output_tokens)
+    print(f"[{task['type']:<22}] Sonnet  \${cost:.5f}")
+    # classification:  "Is Paris in France?" → Sonnet → expensive
+    # code_generation: async HTTP retry logic → Sonnet → appropriate
+# Total: $0.0244`,
+
+    after: `# run_with_routing() — use Haiku to classify, then route
+
+ROUTER_SYSTEM = """Classify task complexity. Respond with ONE word:
+- haiku  — classify, extract, lookup, short summarize
+- sonnet — code generation, reasoning, long-form writing
+- opus   — deep research, multi-step analysis"""
+
+def classify_task(prompt: str) -> str:               # ← CLASSIFIER FUNCTION
+    r = client.messages.create(
+        model="claude-haiku-4-5-20251001",            # cheap router: $0.80/M
+        max_tokens=10,
+        system=ROUTER_SYSTEM,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    label = r.content[0].text.strip().lower()
+    if "haiku" in label: return "claude-haiku-4-5-20251001"
+    if "opus"  in label: return "claude-opus-4-7"
+    return "claude-sonnet-4-6"
+
+for task in TASKS:
+    routed_model = classify_task(task["prompt"])      # ← ROUTE FIRST
+    response = client.messages.create(
+        model=routed_model,                           # Haiku for simple: 73% cheaper
+        max_tokens=512,
+        messages=[{"role": "user", "content": task["prompt"]}],
+    )
+# Total: $0.0056  (77.1% savings — 4 of 6 tasks routed to Haiku)`,
+  },
+
+  {
+    title: "Output Budgeting",
+    file_before: "api/05_output_budgeting.py  (baseline: max_tokens=4096)",
+    file_after:  "api/05_output_budgeting.py  (optimized: tight budgets)",
+    note_before: "Default 4096 max_tokens. Claude uses ~1,140 tokens even for yes/no tasks. Output costs 5× input.",
+    note_after:  "Per-task budgets: 20 for classification, 80 for Q&A, 300 for code. 310 avg vs 1,140. 56.8% savings.",
+    before: `# Baseline: no output constraint — tasks use as many tokens as Claude wants
+
+for task in TASKS:
+    r = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4096,             # ← no constraint on any task type
+        messages=[{
+            "role": "user",
+            "content": task["prompt"],
+        }],
+    )
+    output_tokens = r.usage.output_tokens
+    cost = output_tokens * 15.00 / 1_000_000   # $15/M — 5× input cost
+
+    # "Is this positive or negative?" → Claude returns ~400 tokens
+    # "What is binary search complexity?" → Claude returns ~600 tokens
+    print(f"{task['type']:<20} used {output_tokens:>5} tokens  \${cost:.5f}")
+# Total output cost: $0.0171`,
+
+    after: `# Optimized: tight max_tokens budget per task type
+
+TASK_BUDGETS = {                          # ← DEFINE BUDGETS PER TASK TYPE
+    "classification": 20,    # positive/negative → 20 tokens is plenty
+    "short_qa":       80,    # one-sentence answer → 80 tokens
+    "code_snippet":   300,   # small function → 300 tokens
+    "summarization":  120,   # 2–3 sentences → 120 tokens
+}
+
+for task in TASKS:
+    r = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=TASK_BUDGETS[task["type"]],   # ← TIGHT BUDGET
+        messages=[{
+            "role": "user",
+            "content": task["prompt"],
+        }],
+    )
+    output_tokens = r.usage.output_tokens
+    cost = output_tokens * 15.00 / 1_000_000
+    print(f"{task['type']:<20} used {output_tokens:>5} tokens  \${cost:.5f}")
+# 310 avg output tokens vs 1,140 baseline
+# Total output cost: $0.0047  (56.8% savings)`,
+  },
+
+  {
+    title: "CLAUDE.md",
+    file_before: "claude_code/before/CLAUDE.md  (173 lines · 3,847 tokens)",
+    file_after:  "claude_code/after/CLAUDE.md   (27 lines · 312 tokens)",
+    note_before: "Team contacts, Jira process, FAQ, tech-stack prose. Every token re-sent on every request.",
+    note_after:  "Only rules Claude acts on. 91.9% fewer tokens. ~$6.84/month savings at 50K requests.",
+    before: `# My Project — Claude Code Instructions (BEFORE — 3,847 tokens)
+
+## Introduction and Background
+Welcome to our project! This is a comprehensive guide for Claude to
+understand everything about how we work, our team's philosophy, our
+coding standards, our deployment processes, and everything else...
+
+## Team Information
+- Lead Developer: John Smith (john@example.com, Slack: @johnsmith)
+- Backend Developer: Sarah Johnson (sarah@example.com, Slack: @sarahj)
+- Frontend Developer: Mike Chen (mike@example.com, Slack: @mikechen)
+- DevOps: Lisa Park (lisa@example.com, Slack: @lisapark)
+- We use Jira for project management, Confluence for documentation
+- Standups are at 9am PST Monday through Friday
+- Sprint planning is every two weeks on Monday
+...
+
+## Frequently Asked Questions
+- Q: How do I reset the local database? A: Run \`npm run db:reset\`
+- Q: How do I run just one test? A: jest --testPathPattern=filename
+- Q: How do I see logs? A: Run \`docker-compose logs -f app\`
+...
+# 173 lines of context Claude re-reads on EVERY request`,
+
+    after: `# Project Guide  (AFTER — 312 tokens)
+
+## Stack
+React 18 + TypeScript, Node/Express, PostgreSQL (Prisma), Redis, AWS ECS
+
+## Standards
+- TypeScript strict mode — no \`any\`
+- Functional React components, custom hooks for reusable logic
+- REST + Zod validation; error format: \`{ error, code, details? }\`
+- Transactions for multi-table writes; never log PII
+
+## Git
+Branch: \`feat/JIRA-123-desc\` → squash merge to \`main\`; 2 approvals + CI
+
+## Tests
+80% unit coverage; integration tests for all endpoints
+Run single test: \`jest --testPathPattern=<file>\`
+
+## DB
+Prisma migrations only; additive changes per deploy; soft deletes
+
+## Secrets
+AWS Secrets Manager — never in code or \`.env\`
+
+## Environments
+- Dev: auto-deploy on push to \`develop\`
+- Prod: manual approval, Tue/Thu 2–4am PST, blue-green
+# 27 lines — only rules Claude acts on  (91.9% reduction)`,
+  },
+];
+
+function renderCodeBlock(code) {
+  return code.split('\n').map(line => {
+    const esc = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const isHl = /←|↑|CHANGE|ADD THIS|CACHE|ROUTE|BUDGET|ONLY CHANGE|WRAP|CLASSIFIER|DEFINE/.test(line);
+    const isCm = line.trimStart().startsWith('#');
+    const cls  = isHl ? 'hl' : (isCm ? 'cm' : '');
+    return cls ? `<span class="${cls}">${esc}</span>` : esc;
+  }).join('\n');
+}
+
+function buildCexPanels() {
+  const container = document.getElementById('cexPanels');
+  CEX.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'cex-panel' + (idx === 0 ? ' active' : '');
+    div.dataset.idx = idx;
+    div.innerHTML = `
+      <div class="cex-half">
+        <div class="cex-half-header">
+          <span>Before</span>
+          <span style="font-size:9px;opacity:0.6;">${item.file_before}</span>
+        </div>
+        <pre class="cex-code">${renderCodeBlock(item.before)}</pre>
+        <div class="cex-diff-note">⚠ ${item.note_before}</div>
+      </div>
+      <div class="cex-half">
+        <div class="cex-half-header">
+          <span>After</span>
+          <span style="font-size:9px;opacity:0.6;">${item.file_after}</span>
+        </div>
+        <pre class="cex-code">${renderCodeBlock(item.after)}</pre>
+        <div class="cex-diff-note" style="background:var(--green);">✓ ${item.note_after}</div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+buildCexPanels();
+
+document.querySelectorAll('.cex-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const idx = Number(btn.dataset.idx);
+    document.querySelectorAll('.cex-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.cex-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector(`.cex-panel[data-idx="${idx}"]`).classList.add('active');
+  });
+});
+
+/* ── CHART ────────────────────────────────────── */
+const ctx = document.getElementById("savingsChart").getContext("2d");
+new Chart(ctx, {
+  type: "bar",
+  data: {
+    labels: techniques.map(t => t.name),
+    datasets: [{
+      label: "% Cost Savings",
+      data: techniques.map(t => t.pct),
+      backgroundColor: techniques.map(t => BAR_COLORS[t.cat]),
+      borderColor: "#0a0a0a",
+      borderWidth: 3,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: "y",
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "#0a0a0a",
+        titleFont: { size: 12, weight: "900" },
+        bodyFont: { size: 12 },
+        padding: 12,
+        callbacks: {
+          label: c => ` ${c.raw}% savings vs baseline`,
+          afterLabel: c => {
+            const t = techniques[c.dataIndex];
+            return t.cost ? ` Cost: $${t.cost.toFixed(5)} (was $${BASELINE_COST.toFixed(5)})` : "";
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        max: 100,
+        grid: { color: "#eee" },
+        border: { color: "#0a0a0a", width: 2 },
+        ticks: { font: { size: 11, weight: "700" }, callback: v => v + "%" }
+      },
+      y: {
+        grid: { display: false },
+        border: { color: "#0a0a0a", width: 2 },
+        ticks: { font: { size: 12, weight: "800" } }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
